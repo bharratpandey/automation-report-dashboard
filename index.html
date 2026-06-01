@@ -169,72 +169,99 @@
     .header-sub { display: none; }
     .last-upd { display: none; }
 
-    .page { padding: 14px 12px; }
+    .page { padding: 12px 12px; }
 
-    .date-card { flex-direction: column; align-items: flex-start; gap: 10px; padding: 14px; }
-    .date-right { font-size: 12px; }
+    .date-card { flex-direction: row; align-items: center; gap: 8px; padding: 12px 14px; }
+    .date-label { font-size: 11px; }
+    .date-input { font-size: 13px; padding: 5px 8px; flex: 1; }
+    .date-right { display: none; }
 
-    .tabs-row { flex-direction: column; align-items: flex-start; gap: 8px; }
-    .tabs { width: 100%; }
-    .tab { flex: 1; text-align: center; padding: 6px 8px; font-size: 12px; }
+    .tabs-row { flex-direction: row; align-items: center; justify-content: space-between; }
+    .tabs { gap: 3px; }
+    .tab { padding: 5px 10px; font-size: 11.5px; }
+    .result-count { font-size: 11.5px; white-space: nowrap; }
 
     /* Table → card layout on mobile */
-    .table-card { border-radius: 10px; overflow: hidden; }
+    .table-card { border-radius: 10px; }
     table { display: block; }
     thead { display: none; }
     tbody { display: block; }
     tbody tr {
-      display: flex; flex-direction: column;
-      padding: 14px 14px 10px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      grid-template-rows: auto auto auto;
+      gap: 3px 8px;
+      padding: 12px 14px;
       border-bottom: 1px solid #e8eaed;
-      position: relative;
     }
     tbody tr.active-row { background: #eef3fb; }
-    tbody td { display: block; padding: 0; border: none; font-size: 13px; }
-    .td-time { color: #9a9aaa; font-size: 11.5px; margin-bottom: 4px; }
-    .td-name { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
-    .td-proj { margin-bottom: 4px; }
-    .td-status { margin-bottom: 8px; }
-    .td-env { font-size: 12px; color: #7a8a9a; margin-bottom: 10px; }
-    .td-actions { text-align: left; }
-    .actions { justify-content: flex-start; }
-    .act-btn { font-size: 12px; padding: 5px 12px; }
+    tbody td { display: block; padding: 0; border: none; }
+    .td-time { font-size: 11px; color: #9a9aaa; grid-column: 1; grid-row: 1; }
+    .td-name { font-size: 13.5px; font-weight: 600; grid-column: 1; grid-row: 2; }
+    .td-proj { grid-column: 2; grid-row: 1; text-align: right; }
+    .td-status { grid-column: 2; grid-row: 2; text-align: right; }
+    .td-env { font-size: 11.5px; color: #7a8a9a; grid-column: 1; grid-row: 3; align-self: center; }
+    .td-actions { grid-column: 2; grid-row: 3; text-align: right; }
+    .actions { justify-content: flex-end; gap: 5px; }
+    .act-btn { font-size: 11.5px; padding: 5px 10px; }
 
-    /* Modal full screen on mobile */
+    /* Modal — full screen bottom sheet */
     .modal-overlay { padding: 0; align-items: flex-end; }
     .modal {
       border-radius: 16px 16px 0 0;
       max-width: 100%; width: 100%;
-      height: 92vh;
-      grid-template-rows: auto auto 1fr auto;
+      height: 95vh;
+      grid-template-rows: auto 1fr auto;
     }
+    .modal-header { padding: 14px 16px; }
+    .modal-subject { font-size: 10.5px; }
+    .modal-title { font-size: 14px; }
+
+    /* Stack panels vertically — summary on top, viewer below */
     .modal-panels {
       grid-template-columns: 1fr;
       grid-template-rows: auto 1fr;
       overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
     }
     .modal-summary {
       border-right: none;
       border-bottom: 1px solid #f0f2f5;
-      max-height: none;
       overflow-y: visible;
+      padding: 14px;
     }
-    .modal-viewer { min-height: 340px; }
-    .modal-viewer-bar { flex-wrap: wrap; gap: 6px; }
-    .modal-footer { flex-direction: column; gap: 8px; }
-    .mf-btn { font-size: 13px; padding: 12px; }
-    .trace-dropdown { width: 100%; }
-    .trace-dd-menu { width: 100%; min-width: unset; }
 
-    /* Stats strip on mobile */
-    .m-stats { grid-template-columns: 1fr 1fr 1fr; }
+    /* Viewer tall on mobile */
+    .modal-viewer { min-height: 420px; height: 420px; flex-shrink: 0; }
+    .modal-viewer-bar { padding: 8px 12px; flex-wrap: wrap; gap: 5px; }
+    .modal-viewer-label { font-size: 11.5px; }
+    .mv-btn { font-size: 11px; padding: 4px 9px; }
+
+    /* Footer buttons stacked */
+    .modal-footer { flex-direction: column; gap: 8px; padding: 10px 14px; }
+    .mf-btn { font-size: 13px; padding: 12px; border-radius: 10px; }
+    .trace-dropdown { width: 100%; }
+    .trace-dropdown .mf-btn { width: 100%; }
+    .trace-dd-menu { width: 100%; min-width: unset; bottom: calc(100% + 4px); }
+
+    /* Summary compact */
+    .m-greeting { font-size: 12.5px; margin-bottom: 8px; }
+    .m-banner { font-size: 13px; margin-bottom: 12px; }
+    .m-stats { margin-bottom: 12px; }
+    .m-stat { padding: 10px 6px; }
     .m-stat-num { font-size: 20px; }
-    .m-stat-lbl { font-size: 8.5px; }
+    .m-stat-lbl { font-size: 8px; }
+    .m-table th, .m-table td { padding: 7px 8px; font-size: 11.5px; }
+    .m-note { font-size: 11px; padding: 9px 10px; }
+    .m-footer-text { font-size: 10.5px; }
+    .m-credits { font-size: 10px; }
   }
 
-  @media (max-width: 400px) {
-    .date-input { font-size: 13px; }
-    .modal { height: 96vh; }
+  @media (max-width: 390px) {
+    .tab { padding: 5px 7px; font-size: 11px; }
+    .modal { height: 97vh; }
+    .modal-viewer { min-height: 360px; height: 360px; }
+    .act-btn { font-size: 11px; padding: 4px 8px; }
   }
 </style>
 </head>
