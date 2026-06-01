@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Automation Dashboard — EMB</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; background: #f0f2f5; color: #1a1a2e; min-height: 100vh; -webkit-font-smoothing: antialiased; }
+
+  /* Header */
+  .header { background: #fff; border-bottom: 1px solid #e8eaed; padding: 14px 32px; display: flex; align-items: center; justify-content: space-between; }
+  .header-left { display: flex; align-items: center; gap: 10px; }
+  .logo { width: 32px; height: 32px; background: #1a4a8a; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 14px; }
+  .header-title { font-size: 15px; font-weight: 600; }
+  .header-sub { font-size: 11.5px; color: #9a9aaa; margin-top: 1px; }
+  .header-right { display: flex; align-items: center; gap: 8px; }
+  .last-upd { font-size: 11.5px; color: #9a9aaa; }
+  .refresh-btn { padding: 6px 14px; border: 1px solid #dde1e7; background: #fff; border-radius: 7px; font-size: 12.5px; cursor: pointer; color: #555; font-family: inherit; display: flex; align-items: center; gap: 5px; }
+  .refresh-btn:hover { background: #f5f7fa; }
+
+  /* Page */
+  .page { max-width: 1200px; margin: 0 auto; padding: 28px 24px; }
+
+  /* Date card */
+  .date-card { background: #fff; border: 1px solid #e8eaed; border-radius: 12px; padding: 18px 24px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .date-left { display: flex; align-items: center; gap: 12px; }
+  .date-label { font-size: 13px; font-weight: 700; color: #5a6a7a; letter-spacing: .05em; text-transform: uppercase; }
+  .date-input { padding: 7px 12px; border: 1.5px solid #dde1e7; border-radius: 8px; font-size: 14px; font-family: inherit; color: #1a1a2e; background: #fff; cursor: pointer; outline: none; }
+  .date-input:focus { border-color: #1a4a8a; }
+  .date-right { font-size: 13px; color: #9a9aaa; }
+
+  /* Tabs */
+  .tabs-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .tabs { display: flex; gap: 4px; }
+  .tab { padding: 6px 18px; border-radius: 8px; border: 1px solid #dde1e7; background: #fff; font-size: 13px; font-weight: 500; cursor: pointer; color: #667; font-family: inherit; transition: all .12s; }
+  .tab:hover { background: #f0f2f5; }
+  .tab.active { background: #1a4a8a; color: #fff; border-color: #1a4a8a; }
+  .result-count { font-size: 13px; color: #9a9aaa; }
+
+  /* Table */
+  .table-card { background: #fff; border: 1px solid #e8eaed; border-radius: 12px; overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; }
+  thead tr { background: #f5f7fa; border-bottom: 1.5px solid #e8eaed; }
+  thead th { padding: 13px 20px; font-size: 11.5px; font-weight: 700; color: #7a8a9a; text-transform: uppercase; letter-spacing: .07em; text-align: left; }
+  tbody tr { border-bottom: 1px solid #f0f2f5; transition: background .1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: #f8f9fc; }
+  tbody tr.active-row { background: #eef3fb; }
+  tbody td { padding: 16px 20px; font-size: 13.5px; vertical-align: middle; }
+  .td-time { color: #5a6a8a; font-weight: 500; width: 120px; }
+  .td-name { font-weight: 600; }
+  .td-proj { width: 110px; }
+  .td-status { width: 130px; }
+  .td-env { color: #5a6a7a; width: 130px; }
+  .td-actions { width: 220px; text-align: right; }
+  .proj-tag { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; padding: 3px 10px; border-radius: 99px; font-weight: 600; }
+  .proj-tag.emb { background: #e8f0fb; color: #1d4f93; }
+  .proj-tag.artha { background: #f0eefd; color: #3f3691; }
+  .status-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; padding: 4px 12px; border-radius: 8px; font-weight: 600; }
+  .status-badge.pass { background: #e6f4ed; color: #0a7a45; }
+  .status-badge.fail { background: #fce9e9; color: #b52020; }
+  .status-badge.partial { background: #fdf0d8; color: #8a5010; }
+  .actions { display: flex; gap: 8px; justify-content: flex-end; }
+  .act-btn { display: inline-flex; align-items: center; gap: 5px; padding: 6px 14px; border-radius: 7px; border: 1.5px solid #dde1e7; font-size: 12.5px; font-weight: 500; cursor: pointer; font-family: inherit; background: #fff; color: #445; text-decoration: none; transition: all .12s; }
+  .act-btn:hover { border-color: #1a4a8a; color: #1a4a8a; background: #eef3fb; }
+  .act-btn.active { background: #1a4a8a; color: #fff; border-color: #1a4a8a; }
+  .act-btn.dl { color: #1d4f93; border-color: #b8c8e8; background: #eef3fb; }
+  .act-btn.dl:hover { background: #dce8f8; }
+  .act-btn.disabled { opacity: .4; cursor: not-allowed; pointer-events: none; }
+  .state-row td { text-align: center; padding: 48px 20px; color: #9a9aaa; font-size: 13.5px; }
+  .skel { height: 18px; border-radius: 6px; background: linear-gradient(90deg,#eee 0%,#f5f5f5 50%,#eee 100%); background-size: 200% 100%; animation: shimmer 1.3s infinite; }
+  @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+  /* Modal overlay */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(10,20,40,.55); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
+  .modal-overlay.open { display: flex; }
+
+  /* Modal — wide two-panel */
+  .modal {
+    background: #fff; border-radius: 16px;
+    width: 100%; max-width: 1100px; height: 88vh;
+    display: grid; grid-template-rows: auto 1fr auto;
+    box-shadow: 0 24px 64px rgba(0,0,0,.25);
+    overflow: hidden; animation: modalIn .18s ease-out;
+  }
+  @keyframes modalIn { from{opacity:0;transform:scale(.97)} to{opacity:1;transform:scale(1)} }
+
+  .modal-header { padding: 16px 22px; border-bottom: 1px solid #f0f2f5; display: flex; align-items: flex-start; justify-content: space-between; }
+  .modal-subject { font-size: 11.5px; color: #9a9aaa; font-weight: 500; margin-bottom: 3px; }
+  .modal-title { font-size: 16px; font-weight: 700; color: #1a1a2e; }
+  .modal-close { width: 30px; height: 30px; border-radius: 7px; border: 1px solid #e8eaed; background: #fff; font-size: 16px; cursor: pointer; color: #777; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-left: 12px; }
+  .modal-close:hover { background: #f5f7fa; }
+
+  /* Two-panel body */
+  .modal-panels { display: grid; grid-template-columns: 320px 1fr; overflow: hidden; }
+
+  /* Left — summary */
+  .modal-summary { border-right: 1px solid #f0f2f5; overflow-y: auto; padding: 18px; background: #fff; }
+  .modal-summary::-webkit-scrollbar { width: 4px; }
+  .modal-summary::-webkit-scrollbar-thumb { background: #dde; border-radius: 3px; }
+
+  /* Right — report viewer */
+  .modal-viewer { display: flex; flex-direction: column; overflow: hidden; background: #f5f7fa; }
+  .modal-viewer-bar { padding: 9px 14px; border-bottom: 1px solid #e8eaed; background: #fff; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  .modal-viewer-label { font-size: 12px; font-weight: 600; color: #5a6a7a; display: flex; align-items: center; gap: 6px; }
+  .modal-viewer-actions { display: flex; gap: 6px; }
+  .mv-btn { padding: 4px 11px; border-radius: 6px; border: 1px solid #dde1e7; background: #fff; font-size: 12px; cursor: pointer; color: #445; font-family: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; transition: all .12s; }
+  .mv-btn:hover { background: #eef3fb; color: #1a4a8a; border-color: #1a4a8a; }
+  .modal-viewer-body { flex: 1; overflow: hidden; }
+  .report-iframe { width: 100%; height: 100%; border: none; display: block; }
+  .no-report-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #9a9aaa; font-size: 13px; gap: 10px; text-align: center; padding: 20px; }
+  .no-report-icon { font-size: 40px; opacity: .3; }
+
+  /* Summary styles */
+  .m-greeting { font-size: 13px; color: #444; margin-bottom: 10px; }
+  .m-banner { font-size: 13.5px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: flex-start; gap: 6px; line-height: 1.4; }
+  .m-banner.pass { color: #0a7a45; }
+  .m-banner.fail { color: #b52020; }
+  .m-banner.partial { color: #8a5010; }
+  .m-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1px; background: #e8eaed; border-radius: 10px; overflow: hidden; margin-bottom: 14px; }
+  .m-stat { background: #f8f9fc; padding: 11px 6px; text-align: center; }
+  .m-stat-num { font-size: 22px; font-weight: 700; letter-spacing: -.02em; }
+  .m-stat-lbl { font-size: 9px; color: #9a9aaa; text-transform: uppercase; letter-spacing: .06em; margin-top: 3px; font-weight: 600; }
+  .m-table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+  .m-table tr { border-bottom: 1px solid #f0f2f5; }
+  .m-table tr:last-child { border-bottom: none; }
+  .m-table th { padding: 8px 10px; font-size: 11.5px; font-weight: 600; color: #1a4a8a; width: 44%; text-align: left; background: #fafbfc; }
+  .m-table td { padding: 8px 10px; font-size: 11.5px; color: #334; }
+  .m-table a { color: #1a4a8a; font-weight: 500; }
+  .m-table a:hover { text-decoration: underline; }
+  .m-note { border-left: 3px solid #d97706; background: #fffbf0; border-radius: 0 8px 8px 0; padding: 10px 12px; margin-bottom: 12px; font-size: 11.5px; color: #555; line-height: 1.6; }
+  .m-note strong { color: #92400e; }
+  .m-footer-text { font-size: 11px; color: #9a9aaa; margin-bottom: 8px; line-height: 1.5; }
+  .m-credits { font-size: 10px; color: #bbb; }
+
+  /* Modal footer */
+  .modal-footer { padding: 12px 18px; border-top: 1px solid #f0f2f5; display: flex; gap: 10px; background: #fafbfc; }
+  .mf-btn { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 10px 16px; border-radius: 9px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; text-decoration: none; transition: all .12s; border: none; }
+  .mf-btn.trace { background: #1a4a8a; color: #fff; }
+  .mf-btn.trace:hover { background: #153d74; }
+  .mf-btn.trace.disabled { background: #c5cfe8; cursor: not-allowed; pointer-events: none; }
+  .mf-btn.dl { background: #f0f2f5; color: #1a1a2e; border: 1.5px solid #dde1e7; }
+  .mf-btn.dl:hover { background: #e8eaed; }
+  .mf-btn.dl.disabled { opacity: .5; cursor: not-allowed; pointer-events: none; }
+
+  /* Trace dropdown */
+  .trace-dropdown { position: relative; flex: 1; }
+  .trace-dropdown .mf-btn { width: 100%; }
+  .trace-dd-menu {
+    display: none; position: absolute; bottom: calc(100% + 6px); left: 0;
+    background: #fff; border: 1px solid #e8eaed; border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.12); min-width: 280px; overflow: hidden; z-index: 10;
+  }
+  .trace-dd-menu.open { display: block; }
+  .trace-opt {
+    display: flex; align-items: center; width: 100%; padding: 10px 14px;
+    font-size: 12.5px; font-family: inherit; background: none; border: none;
+    border-bottom: 1px solid #f0f2f5; cursor: pointer; color: #1a1a2e;
+    text-align: left; transition: background .1s; gap: 6px;
+  }
+  .trace-opt:last-child { border-bottom: none; }
+  .trace-opt:hover { background: #eef3fb; color: #1a4a8a; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="logo">A</div>
+    <div>
+      <div class="header-title">Automation Dashboard</div>
+      <div class="header-sub">EMB RA &amp; Artha — Test execution history</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <span class="last-upd" id="last-upd">—</span>
+    <button class="refresh-btn" onclick="loadReports(true)">↻ Refresh</button>
+  </div>
+</div>
+
+<div class="page">
+  <div class="date-card">
+    <div class="date-left">
+      <span style="font-size:20px">📅</span>
+      <span class="date-label">Select Date:</span>
+      <input class="date-input" type="date" id="date-picker" onchange="renderTable()">
+    </div>
+    <span class="date-right" id="date-hint">Showing reports for selected day</span>
+  </div>
+
+  <div class="tabs-row">
+    <div class="tabs">
+      <button class="tab active" onclick="setTab('all',this)">All Projects</button>
+      <button class="tab" onclick="setTab('EMB_RA',this)">EMB RA</button>
+      <button class="tab" onclick="setTab('ARTHA',this)">Artha</button>
+    </div>
+    <span class="result-count" id="result-count">—</span>
+  </div>
+
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Report Name</th>
+          <th>Project</th>
+          <th>Status</th>
+          <th>Environment</th>
+          <th style="text-align:right">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="table-body">
+        <tr><td><div class="skel" style="width:75px"></div></td><td><div class="skel" style="width:200px"></div></td><td><div class="skel" style="width:80px"></div></td><td><div class="skel" style="width:90px"></div></td><td><div class="skel" style="width:110px"></div></td><td></td></tr>
+        <tr><td><div class="skel" style="width:75px"></div></td><td><div class="skel" style="width:160px"></div></td><td><div class="skel" style="width:80px"></div></td><td><div class="skel" style="width:90px"></div></td><td><div class="skel" style="width:110px"></div></td><td></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
+  <div class="modal">
+
+    <div class="modal-header">
+      <div>
+        <div class="modal-subject" id="modal-subject">—</div>
+        <div class="modal-title" id="modal-title">—</div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+
+    <div class="modal-panels">
+
+      <!-- Left: Summary -->
+      <div class="modal-summary" id="modal-summary">
+        <!-- filled by JS -->
+      </div>
+
+      <!-- Right: Report viewer -->
+      <div class="modal-viewer">
+        <div class="modal-viewer-bar">
+          <span class="modal-viewer-label">📄 Execution Report Viewer</span>
+          <div class="modal-viewer-actions">
+            <a class="mv-btn" id="mv-open-tab" href="#" target="_blank" rel="noopener">↗ Open in tab</a>
+            <a class="mv-btn" id="mv-download" href="#" download>↓ Download</a>
+          </div>
+        </div>
+        <div class="modal-viewer-body" id="modal-viewer-body">
+          <!-- iframe or no-report state -->
+        </div>
+      </div>
+
+    </div>
+
+    <div class="modal-footer" id="modal-footer">
+      <!-- trace + download buttons -->
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const SUPABASE_URL = 'https://htpuexuqjoiptynfaybg.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_jk-X3DyepVV2UY1EhV9_6A_r8KW8l-i';
+
+  let allReports = [];
+  let byDate = {};
+  let activeTab = 'all';
+  let activeId = null;
+
+  // Embedded demo ExtentReport HTML (shown in iframe for preview)
+  const DEMO_REPORT_HTML = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><title>EMB Test Dashboard</title><link rel="shortcut icon" href="https://cdn.jsdelivr.net/gh/extent-framework/extent-github-cdn@b00a2d0486596e73dd7326beacf352c639623a0e/commons/img/logo.png"><link href="https://cdn.jsdelivr.net/gh/extent-framework/extent-github-cdn@ce8b10435bcbae260c334c0d0c6b61d2c19b6168/spark/css/spark-style.css" rel="stylesheet"/><link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet"><script src="https://cdn.jsdelivr.net/gh/extent-framework/extent-github-cdn@7cc78ce/spark/js/jsontree.js"><\/script></head><body class="spa -report dark"><div class="app"><div class="layout"><div class="header navbar"><div class="vheader"><div class="nav-logo"><a href="#"><div class="logo" style="background-image:url('https://cdn.jsdelivr.net/gh/extent-framework/extent-github-cdn@b00a2d0486596e73dd7326beacf352c639623a0e/commons/img/logo.png')"></div></a></div><ul class="nav-left"><li class="search-box"><a class="search-toggle" href="#"><i class="search-icon fa fa-search"></i><i class="search-icon-close fa fa-close"></i></a></li><li class="search-input"><input id="search-tests" class="form-control" type="text" placeholder="Search..."></li></ul><ul class="nav-right"><li class="m-r-10"><a href="#"><span class="badge badge-primary">E2E Automation Flow Execution</span></a></li><li class="m-r-10"><a href="#"><span class="badge badge-primary">May 28, 2026 07:08:28 AM</span></a></li></ul></div></div><div class="side-nav"><div class="side-nav-inner"><ul class="side-nav-menu"><li class="nav-item dropdown" onclick="toggleView('test-view')"><a id="nav-test" class="dropdown-toggle" href="#"><span class="ico"><i class="fa fa-list"></i></span></a></li><li class="nav-item dropdown" onclick="toggleView('dashboard-view')"><a id="nav-dashboard" class="dropdown-toggle" href="#"><span class="ico"><i class="fa fa-bar-chart"></i></span></a></li></ul></div></div><div class="vcontainer"><div class="main-content"><div class="test-wrapper row view test-view"><div class="test-list"><div class="test-list-tools"><ul class="tools pull-left"><li><a href="#"><span class="font-size-14">Tests</span></a></li></ul><ul class="tools text-right"><li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-exclamation-circle"></i></a><ul id="status-toggle" class="dropdown-menu dropdown-md p-v-0"><a class="dropdown-item" status="pass" href="#"><span>Pass</span><span class="status success"></span></a><div class="dropdown-divider"></div><a status="clear" class="dropdown-item" href="#"><span>Clear</span><span class="pull-right"><i class="fa fa-close"></i></span></a></ul></li></ul></div><div class="test-list-wrapper scrollable"><ul class="test-list-item"><li class="test-item" status="pass" test-id="1" author="" tag="" device=""><div class="test-detail"><p class="name">Report Generation &amp; Email Verification</p><p class="text-sm"><span>7:08:46 AM</span> / <span>00:00:38:347</span><span class="badge pass-bg log float-right">Pass</span></p></div><div class="test-contents d-none"><div class="detail-head"><div class="p-v-10"><div class="info"><h5 class="test-status text-pass">Report Generation &amp; Email Verification</h5><span class="badge badge-success">05.28.2026 7:08:46 AM</span><span class="badge badge-danger">05.28.2026 7:09:24 AM</span><span class="badge badge-default">00:00:38:347</span>&middot;<span class="uri-anchor badge badge-default">#test-id=1</span><span title="Skip to the next failed step" class="badge badge-danger pointer float-right ne ml-1"><i class="fa fa-fast-forward"></i></span><span title="Collapse all nodes" class="badge badge-default pointer float-right ct ml-1"><i class="fa fa-compress"></i></span><span title="Expand all nodes" class="badge badge-default pointer float-right et"><i class="fa fa-expand"></i></span></div></div></div><div class="detail-body mt-4"><table class="table table-sm"><thead><tr><th class="status-col">Status</th><th class="timestamp-col">Timestamp</th><th class="details-col">Details</th></tr></thead><tbody><tr class="event-row"><td><span class="badge log info-bg">Info</span></td><td>7:08:46 AM</td><td>[REPORT] 🚀 Starting Report Generation Check...</td></tr><tr class="event-row"><td><span class="badge log info-bg">Info</span></td><td>7:08:46 AM</td><td>[STEP 1] 🔑 Admin Login</td></tr><tr class="event-row"><td><span class="badge log pass-bg">Pass</span></td><td>7:08:50 AM</td><td>✅ Login Successful toast verified.</td></tr><tr class="event-row"><td><span class="badge log info-bg">Info</span></td><td>7:08:52 AM</td><td>[STEP 2] 📋 Navigate to Requirement Listing</td></tr><tr class="event-row"><td><span class="badge log pass-bg">Pass</span></td><td>7:08:54 AM</td><td>✅ Requirement Listing page loaded.</td></tr><tr class="event-row"><td><span class="badge log info-bg">Info</span></td><td>7:08:54 AM</td><td>[STEP 3] 🔍 Open Search &amp; Filters</td></tr><tr class="event-row"><td><span class="badge log pass-bg">Pass</span></td><td>7:08:55 AM</td><td>✅ Search &amp; Filters expanded.</td></tr><tr class="event-row"><td><span class="badge log info-bg">Info</span></td><td>7:08:55 AM</td><td>[STEP 4] 📥 Click Download Reports</td></tr><tr class="event-row"><td><span class="badge log pass-bg">Pass</span></td><td>7:09:00 AM</td><td>✅ API Status: 200 — https://api-ra.embtalent.ai/api/v1/emb/requirement/all</td></tr><tr class="event-row"><td><span class="badge log pass-bg">Pass</span></td><td>7:09:00 AM</td><td>✅ Download Reports clicked at: 07:09 AM</td></tr><tr class="event-row"><td><span class="badge log pass-bg">Pass</span></td><td>7:09:00 AM</td><td>✅ Toast: Reports has been generated and sent to your email</td></tr><tr class="event-row"><td><span class="badge log info-bg">Info</span></td><td>7:09:00 AM</td><td>💾 Admin trace saved → target/report-generation-admin-trace.zip</td></tr><tr class="event-row"><td><span class="badge log info-bg">Info</span></td><td>7:09:00 AM</td><td>[STEP 5] 📧 Open Gmail &amp; Verify Report Email</td></tr><tr class="event-row"><td><span class="badge log pass-bg">Pass</span></td><td>7:09:20 AM</td><td>✅ Email time 4:56PM is at or after click time — valid!</td></tr><tr class="event-row"><td><span class="badge log pass-bg">Pass</span></td><td>7:09:23 AM</td><td>✅ Email opened.</td></tr><tr class="event-row"><td><span class="badge log pass-bg">Pass</span></td><td>7:09:23 AM</td><td>✅ Email content verified — Download Report link present.</td></tr><tr class="event-row"><td><span class="badge log pass-bg">Pass</span></td><td>7:09:23 AM</td><td>✅ Download link extracted: https://blobstorageemb.blob.core.windows.net/exmyb-prod-new/reports/51e2db8f-requirements-report.xlsx</td></tr><tr class="event-row"><td><span class="badge log pass-bg">Pass</span></td><td>7:09:24 AM</td><td>[REPORT] ✅ Report Generation Check Completed!</td></tr></tbody></table></div></div></li></ul></div></div><div class="test-content scrollable"><div class="test-content-tools"><ul><li><a class="back-to-test" href="#"><i class="fa fa-arrow-left"></i></a></li></ul></div><div class="test-content-detail"><div class="detail-body"></div></div></div></div><div class="container-fluid p-4 view dashboard-view"><div class="row"><div class="col-md-3"><div class="card"><div class="card-body"><p class="m-b-0">Started</p><h3>May 28, 2026 07:08:28 AM</h3></div></div></div><div class="col-md-3"><div class="card"><div class="card-body"><p class="m-b-0">Ended</p><h3>May 28, 2026 07:09:24 AM</h3></div></div></div><div class="col-md-3"><div class="card"><div class="card-body"><p class="m-b-0 text-pass">Tests Passed</p><h3>1</h3></div></div></div><div class="col-md-3"><div class="card"><div class="card-body"><p class="m-b-0 text-fail">Tests Failed</p><h3>0</h3></div></div></div></div><div class="row"><div class="col-md-6"><div class="card"><div class="card-header"><h6 class="card-title">Tests</h6></div><div class="card-body"><canvas id="parent-analysis" width="115" height="90"></canvas></div><div class="card-footer"><div><small><b>1</b> tests passed</small></div><div><small><b>0</b> tests failed, <b>0</b> skipped</small></div></div></div></div><div class="col-md-6"><div class="card"><div class="card-header"><h6 class="card-title">Log events</h6></div><div class="card-body"><canvas id="events-analysis" width="115" height="90"></canvas></div><div class="card-footer"><div><small><b>11</b> events passed</small></div><div><small><b>0</b> events failed, <b>23</b> others</small></div></div></div></div></div><div class="row"><div class="col-md-12"><div class="card"><div class="card-header"><p>Timeline</p></div><div class="card-body pt-0"><canvas id="timeline" height="120"></canvas></div></div></div></div><script>var timeline={"Report Generation & Email Verification":38.347};<\/script><div class="row"><div class="col-lg-6 col-md-12"><div class="card"><div class="card-header"><p>System/Environment</p></div><div class="card-body pb-0 pt-0"><table class="table table-sm table-bordered"><thead><tr class="bg-gray"><th>Name</th><th>Value</th></tr></thead><tbody><tr><td>Environment</td><td>UAT</td></tr><tr><td>Tester</td><td>EMB Automation</td></tr></tbody></table></div></div></div></div></div><script>var statusGroup={parentCount:5,passParent:1,failParent:0,warningParent:0,skipParent:0,childCount:5,passChild:0,failChild:0,warningChild:0,skipChild:0,infoChild:0,grandChildCount:5,passGrandChild:0,failGrandChild:0,warningGrandChild:0,skipGrandChild:0,infoGrandChild:0,eventsCount:5,passEvents:11,failEvents:0,warningEvents:0,skipEvents:0,infoEvents:23};<\/script></div></div></div></div><script src="https://cdn.jsdelivr.net/gh/extent-framework/extent-github-cdn@ce8b10435bcbae260c334c0d0c6b61d2c19b6168/spark/js/spark-script.js"><\/script></body></html>`;
+
+  // Dummy preview data
+  const DUMMY = [
+    { id:'d1', project:'EMB_RA', environment:'Production', status:'PASS', passed:11, failed:0, total:1, duration_seconds:38, run_at: new Date().toISOString(), report_html: DEMO_REPORT_HTML, report_url:null, trace_url:null,
+      traces:[
+        {name:'report-generation-admin-trace.zip', url:'https://trace.playwright.dev'},
+        {name:'report-generation-gmail-trace.zip', url:'https://trace.playwright.dev'},
+        {name:'report-generation-fallback-trace.zip', url:'https://trace.playwright.dev'}
+      ]
+    },
+    { id:'d2', project:'ARTHA', environment:'Production', status:'PASS', passed:94, failed:0, total:38, duration_seconds:214, run_at: (() => { const d=new Date(); d.setHours(d.getHours()-4); return d.toISOString(); })(), report_html: DEMO_REPORT_HTML, report_url:null, trace_url:null,
+      traces:[
+        {name:'artha-prod-health-trace.zip', url:'https://trace.playwright.dev'}
+      ]
+    },
+    { id:'d3', project:'EMB_RA', environment:'Production', status:'PARTIAL', passed:14, failed:3, total:17, duration_seconds:195, run_at: (() => { const d=new Date(); d.setHours(d.getHours()-8); return d.toISOString(); })(), report_html:null, report_url:null, trace_url:null, traces:[] },
+    { id:'d4', project:'ARTHA', environment:'UAT', status:'FAIL', passed:0, failed:22, total:22, duration_seconds:312, run_at: (() => { const d=new Date(); d.setDate(d.getDate()-1); d.setHours(7,30); return d.toISOString(); })(), report_html:null, report_url:null, trace_url:null, traces:[] },
+    { id:'d5', project:'EMB_RA', environment:'Production', status:'PASS', passed:118, failed:0, total:46, duration_seconds:261, run_at: (() => { const d=new Date(); d.setDate(d.getDate()-1); d.setHours(19,30); return d.toISOString(); })(), report_html:null, report_url:null, trace_url:null, traces:[] }
+  ];
+
+  function todayStr() {
+    const d = new Date();
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+  document.getElementById('date-picker').value = todayStr();
+
+  async function loadReports(skel) {
+    if (skel) showSkeleton();
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/test_reports?select=*&order=run_at.desc&limit=500`,
+        { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+      );
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      allReports = data.length > 0 ? data : DUMMY;
+      buildByDate();
+      document.getElementById('last-upd').textContent = data.length > 0
+        ? 'Updated ' + new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true})
+        : '⚠️ Preview — dummy data';
+      renderTable();
+    } catch(e) {
+      allReports = DUMMY;
+      buildByDate();
+      document.getElementById('last-upd').textContent = '⚠️ Preview — dummy data';
+      renderTable();
+    }
+  }
+
+  function buildByDate() {
+    byDate = {};
+    allReports.forEach(r => {
+      const k = dkey(new Date(r.run_at));
+      if (!byDate[k]) byDate[k] = [];
+      byDate[k].push(r);
+    });
+  }
+
+  function showSkeleton() {
+    document.getElementById('table-body').innerHTML = [1,2,3].map(()=>`
+      <tr><td><div class="skel" style="width:75px"></div></td><td><div class="skel" style="width:200px"></div></td>
+      <td><div class="skel" style="width:80px"></div></td><td><div class="skel" style="width:90px"></div></td>
+      <td><div class="skel" style="width:110px"></div></td><td></td></tr>`).join('');
+  }
+
+  function dkey(d) {
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+  function setTab(tab,el) { activeTab=tab; document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active')); el.classList.add('active'); renderTable(); }
+
+  function rName(r) { return r.project==='EMB_RA'?'EMB Prod Health Check':'Artha Health Check'; }
+
+  function renderTable() {
+    const key = document.getElementById('date-picker').value;
+    let rows = byDate[key] || [];
+    if (activeTab !== 'all') rows = rows.filter(r=>r.project===activeTab);
+    document.getElementById('result-count').textContent = rows.length===0 ? 'No runs found' : rows.length+' run'+(rows.length!==1?'s':'')+' found';
+    const tbody = document.getElementById('table-body');
+    if (rows.length===0) { tbody.innerHTML=`<tr class="state-row"><td colspan="6">📭 No automation runs found for this date.</td></tr>`; return; }
+    tbody.innerHTML = rows.map(r => {
+      const time = new Date(r.run_at).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true});
+      const proj = r.project==='EMB_RA'?'EMB RA':'Artha';
+      const pCls = r.project==='EMB_RA'?'emb':'artha';
+      const sCls = r.status==='PASS'?'pass':r.status==='PARTIAL'?'partial':'fail';
+      const sLbl = r.status==='PASS'?'✅ Passed':r.status==='PARTIAL'?'⚠️ Partial':'❌ Failed';
+      const isA = activeId===r.id;
+      const hasDl = !!r.report_url;
+      return `<tr class="${isA?'active-row':''}" id="tr-${r.id}">
+        <td class="td-time">${time}</td>
+        <td class="td-name">${rName(r)}</td>
+        <td class="td-proj"><span class="proj-tag ${pCls}">${proj}</span></td>
+        <td class="td-status"><span class="status-badge ${sCls}">${sLbl}</span></td>
+        <td class="td-env">${r.environment||'—'}</td>
+        <td class="td-actions"><div class="actions">
+          <button class="act-btn ${isA?'active':''}" onclick="openModal('${r.id}')">👁 View</button>
+          ${hasDl?`<a class="act-btn dl" href="${r.report_url}" download>📥 Download</a>`:`<span class="act-btn dl disabled">📥 Download</span>`}
+        </div></td>
+      </tr>`;
+    }).join('');
+  }
+
+  function openModal(id) {
+    const r = allReports.find(x=>x.id===id);
+    if (!r) return;
+    activeId = id;
+
+    const projFull = r.project==='EMB_RA'?'EMB RA':'Artha';
+    const proj = rName(r);
+    document.getElementById('modal-subject').textContent = `Subject: ${projFull} / ${proj}`;
+    document.getElementById('modal-title').textContent = proj;
+
+    const sCls = r.status==='PASS'?'pass':r.status==='PARTIAL'?'partial':'fail';
+    const passed=r.passed||0, failed=r.failed||0, total=r.total||0;
+    let banner = r.status==='PASS'
+      ? `✅ Health Check Passed — All ${total} Steps OK`
+      : r.status==='FAIL'
+        ? `❌ Health Check Failed — ${failed} Steps Failed`
+        : `⚠️ Health Check Completed with ${failed} Failures`;
+
+    const execTime = new Date(r.run_at).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})
+      + ', ' + new Date(r.run_at).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true}) + ' IST';
+    const dur = r.duration_seconds ? Math.floor(r.duration_seconds/60)+'m '+r.duration_seconds%60+'s' : '—';
+
+    const traces = Array.isArray(r.traces)&&r.traces.length>0 ? r.traces : (r.trace_url?[{name:proj+' trace',url:r.trace_url}]:[]);
+    const firstTrace = traces[0];
+    const traceRows = traces.map(t=>`<tr><th>Trace File</th><td><a href="https://trace.playwright.dev/?trace=${encodeURIComponent(t.url)}" target="_blank" rel="noopener">${esc(t.name)} ↗</a></td></tr>`).join('');
+    const slowApis = Array.isArray(r.results) ? r.results.filter(t=>t.duration>1).length : null;
+
+    // LEFT — summary
+    document.getElementById('modal-summary').innerHTML = `
+      <p class="m-greeting">Hello Team,</p>
+      <p class="m-banner ${sCls}">${banner}</p>
+      <div class="m-stats">
+        <div class="m-stat"><div class="m-stat-num" style="color:#0a7a45">${passed}</div><div class="m-stat-lbl">Cases Passed</div></div>
+        <div class="m-stat"><div class="m-stat-num" style="color:#b52020">${failed}</div><div class="m-stat-lbl">Cases Failed</div></div>
+        <div class="m-stat"><div class="m-stat-num" style="color:#1a4a8a">${total}</div><div class="m-stat-lbl">Total Modules</div></div>
+      </div>
+      <table class="m-table">
+        <tr><th>Environment</th><td>${esc(r.environment||'—')} — ${r.project==='EMB_RA'?'admin.embtalent.ai':'artha.emb.global'}</td></tr>
+        <tr><th>Execution Time</th><td>${execTime}</td></tr>
+        <tr><th>Duration</th><td>${dur}</td></tr>
+        ${slowApis!==null?`<tr><th>Slow APIs (&gt;1s)</th><td><strong>${slowApis}</strong> <span style="color:#9a9aaa;font-size:11px">(informational)</span></td></tr>`:''}
+        ${traceRows}
+      </table>
+      <div class="m-note"><strong>📌 Stakeholder Note:</strong> This report reflects the latest automated execution run via GitHub Actions. All steps marked <strong>PASSED</strong> have been verified end-to-end. Download the HTML dashboard for full step-by-step logs and screenshots.</div>
+      <p class="m-footer-text">Full execution logs and automated application screenshots are packaged completely in the attached HTML Dashboard.</p>
+      <p class="m-credits">Automated by EMB Bot · GitHub Actions · EMB Core Ops</p>
+    `;
+
+    // RIGHT — report iframe
+    const viewerBody = document.getElementById('modal-viewer-body');
+    const mvOpen = document.getElementById('mv-open-tab');
+    const mvDl = document.getElementById('mv-download');
+
+    if (r.report_url) {
+      // Real report from Supabase — load via src
+      viewerBody.innerHTML = `<iframe class="report-iframe" src="${r.report_url}" title="Execution Report"></iframe>`;
+      mvOpen.href = r.report_url; mvOpen.style.opacity='1'; mvOpen.style.pointerEvents='';
+      mvDl.href = r.report_url; mvDl.style.opacity='1'; mvDl.style.pointerEvents='';
+    } else if (r.report_html) {
+      // Demo embedded HTML — load via srcdoc
+      viewerBody.innerHTML = '';
+      const iframe = document.createElement('iframe');
+      iframe.className = 'report-iframe';
+      iframe.title = 'Execution Report';
+      iframe.srcdoc = r.report_html;
+      viewerBody.appendChild(iframe);
+      // blob download for embedded HTML
+      mvOpen.href='#'; mvOpen.style.opacity='.4'; mvOpen.style.pointerEvents='none';
+      mvDl.onclick = () => downloadHtml(r.report_html, rName(r));
+      mvDl.href='#'; mvDl.style.opacity='1'; mvDl.style.pointerEvents='';
+    } else {
+      viewerBody.innerHTML = `<div class="no-report-state">
+        <div class="no-report-icon">📄</div>
+        <div><strong>No report file yet</strong></div>
+        <div style="font-size:12px;max-width:260px;text-align:center">Once GitHub Actions uploads the HTML report, it will appear here automatically.</div>
+      </div>`;
+      mvOpen.href='#'; mvOpen.style.opacity='.4'; mvOpen.style.pointerEvents='none';
+      mvDl.href='#'; mvDl.style.opacity='.4'; mvDl.style.pointerEvents='none';
+    }
+
+    // FOOTER buttons
+    const hasReport = !!(r.report_url || r.report_html);
+    let traceBtn = '';
+    if (traces.length === 0) {
+      traceBtn = `<button class="mf-btn trace disabled" disabled title="No trace files available">🔧 Open Playwright Web Trace Engine</button>`;
+    } else if (traces.length === 1) {
+      const href = `https://trace.playwright.dev/?trace=${encodeURIComponent(traces[0].url)}`;
+      traceBtn = `<a class="mf-btn trace" href="${href}" target="_blank" rel="noopener">🔧 Open Playwright Web Trace Engine</a>`;
+    } else {
+      // Multiple traces — show dropdown
+      const opts = traces.map((t,i) =>
+        `<button class="trace-opt" onclick="openTrace('${encodeURIComponent(t.url)}','${esc(t.name)}',this)">
+          🔍 ${esc(t.name)}
+        </button>`
+      ).join('');
+      traceBtn = `
+        <div class="trace-dropdown" id="trace-dd">
+          <button class="mf-btn trace" onclick="toggleTraceDD(event)">
+            🔧 Playwright Traces (${traces.length}) ▾
+          </button>
+          <div class="trace-dd-menu" id="trace-dd-menu">${opts}</div>
+        </div>`;
+    }
+
+    const dlBtn = hasReport
+      ? `<button class="mf-btn dl" onclick="downloadReport('${r.id}')">📥 Download Execution Report</button>`
+      : `<button class="mf-btn dl disabled" disabled title="No report file yet">📥 Download Execution Report</button>`;
+
+    document.getElementById('modal-footer').innerHTML = traceBtn + dlBtn;
+
+    document.getElementById('modal-overlay').classList.add('open');
+    renderTable();
+  }
+
+  function closeModal() {
+    document.getElementById('modal-overlay').classList.remove('open');
+    activeId = null;
+    renderTable();
+  }
+
+  function handleOverlayClick(e) { if(e.target===document.getElementById('modal-overlay')) closeModal(); }
+  function esc(s) { if(s==null)return''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
+
+  loadReports(true);
+  setInterval(()=>loadReports(false), 120000);
+
+  // ── Trace dropdown toggle ──
+  function toggleTraceDD(e) {
+    e.stopPropagation();
+    document.getElementById('trace-dd-menu').classList.toggle('open');
+  }
+  document.addEventListener('click', () => {
+    const m = document.getElementById('trace-dd-menu');
+    if (m) m.classList.remove('open');
+  });
+  function openTrace(encodedUrl, name) {
+    const url = decodeURIComponent(encodedUrl);
+    // If it's a real zip URL, open in trace viewer; if demo just open trace.playwright.dev
+    const viewerUrl = url.startsWith('http') && url.includes('.zip')
+      ? `https://trace.playwright.dev/?trace=${encodedUrl}`
+      : 'https://trace.playwright.dev';
+    window.open(viewerUrl, '_blank');
+    document.getElementById('trace-dd-menu').classList.remove('open');
+  }
+
+  // ── Download report (works for both real URL and embedded HTML) ──
+  function downloadReport(id) {
+    const r = allReports.find(x => x.id === id);
+    if (!r) return;
+    if (r.report_url) {
+      // Real file — trigger anchor download
+      const a = document.createElement('a');
+      a.href = r.report_url; a.download = rName(r) + '.html';
+      a.click();
+    } else if (r.report_html) {
+      // Embedded HTML — create blob and download
+      downloadHtml(r.report_html, rName(r));
+    }
+  }
+
+  function downloadHtml(html, name) {
+    const blob = new Blob([html], {type: 'text/html'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = name.replace(/\s+/g,'-') + '-report.html';
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+</script>
+</body>
+</html>
