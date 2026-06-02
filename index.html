@@ -86,7 +86,7 @@
   }
   @keyframes modalIn { from{opacity:0;transform:scale(.97)} to{opacity:1;transform:scale(1)} }
 
-  .modal-header { padding: 16px 22px; border-bottom: 1px solid #f0f2f5; display: flex; align-items: flex-start; justify-content: space-between; }
+  .modal-header { padding: 16px 22px; border-bottom: 1px solid #f0f2f5; display: flex; align-items: flex-start; justify-content: space-between; position: sticky; top: 0; background: #fff; z-index: 10; flex-shrink: 0; }
   .modal-subject { font-size: 11.5px; color: #9a9aaa; font-weight: 500; margin-bottom: 3px; }
   .modal-title { font-size: 16px; font-weight: 700; color: #1a1a2e; }
   .modal-close { width: 30px; height: 30px; border-radius: 7px; border: 1px solid #e8eaed; background: #fff; font-size: 16px; cursor: pointer; color: #777; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-left: 12px; }
@@ -263,6 +263,34 @@
     .modal-viewer { min-height: 360px; height: 360px; }
     .act-btn { font-size: 11px; padding: 4px 8px; }
   }
+
+  /* ── Clean Log Viewer ── */
+  .log-viewer { padding: 14px; height: 100%; overflow-y: auto; background: #fafafa; }
+  .log-viewer::-webkit-scrollbar { width: 4px; }
+  .log-viewer::-webkit-scrollbar-thumb { background: #dde; border-radius: 3px; }
+  .log-step {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 9px 12px; margin-bottom: 5px;
+    background: #fff; border-radius: 8px;
+    border: 1px solid #f0f2f5;
+    font-size: 12.5px; line-height: 1.5;
+  }
+  .log-step.pass { border-left: 3px solid #0a7a45; }
+  .log-step.fail { border-left: 3px solid #b52020; }
+  .log-step.info { border-left: 3px solid #d0d5dd; }
+  .log-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+  .log-dot.pass { background: #0a7a45; }
+  .log-dot.fail { background: #b52020; }
+  .log-dot.info { background: #9a9aaa; }
+  .log-text { flex: 1; color: #334; word-break: break-word; }
+  .log-time { font-size: 10.5px; color: #9a9aaa; white-space: nowrap; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .log-empty { text-align: center; padding: 40px 20px; color: #9a9aaa; font-size: 13px; }
+  .log-empty-icon { font-size: 32px; opacity: .3; margin-bottom: 8px; }
+  .log-section {
+    font-size: 10.5px; font-weight: 700; color: #7a8a9a;
+    text-transform: uppercase; letter-spacing: .07em;
+    padding: 10px 4px 4px; margin-bottom: 4px;
+  }
 </style>
 </head>
 <body>
@@ -339,17 +367,17 @@
         <!-- filled by JS -->
       </div>
 
-      <!-- Right: Report viewer -->
+      <!-- Right: Report viewer — clean step log -->
       <div class="modal-viewer">
         <div class="modal-viewer-bar">
-          <span class="modal-viewer-label">📄 Execution Report Viewer</span>
+          <span class="modal-viewer-label">📋 Execution Log Viewer</span>
           <div class="modal-viewer-actions">
-            <a class="mv-btn" id="mv-open-tab" href="#" target="_blank" rel="noopener">↗ Open in tab</a>
+            <a class="mv-btn" id="mv-open-tab" href="#" target="_blank" rel="noopener">↗ Full report</a>
             <a class="mv-btn" id="mv-download" href="#" download>↓ Download</a>
           </div>
         </div>
         <div class="modal-viewer-body" id="modal-viewer-body">
-          <!-- iframe or no-report state -->
+          <!-- step log rendered here -->
         </div>
       </div>
 
@@ -527,36 +555,18 @@
     const mvOpen = document.getElementById('mv-open-tab');
     const mvDl = document.getElementById('mv-download');
 
+    // Always show clean log viewer
+    renderLogViewer(viewerBody, r);
+
+    // Open in tab / Download buttons
     if (r.report_url) {
-      // Real report from Supabase — load via src
-      viewerBody.innerHTML = '';
-      const rIframe = document.createElement('iframe');
-      rIframe.className = 'report-iframe';
-      rIframe.title = 'Execution Report';
-      rIframe.src = r.report_url;
-      rIframe.onload = () => { try { injectMobileCSS(rIframe); } catch(e) {} };
-      viewerBody.appendChild(rIframe);
       mvOpen.href = r.report_url; mvOpen.style.opacity='1'; mvOpen.style.pointerEvents='';
-      mvDl.href = r.report_url; mvDl.style.opacity='1'; mvDl.style.pointerEvents='';
+      mvDl.href = r.report_url; mvDl.removeAttribute('onclick'); mvDl.style.opacity='1'; mvDl.style.pointerEvents='';
     } else if (r.report_html) {
-      // Demo embedded HTML — load via srcdoc
-      viewerBody.innerHTML = '';
-      const iframe = document.createElement('iframe');
-      iframe.className = 'report-iframe';
-      iframe.title = 'Execution Report';
-      iframe.srcdoc = r.report_html;
-      iframe.onload = () => injectMobileCSS(iframe);
-      viewerBody.appendChild(iframe);
-      // blob download for embedded HTML
       mvOpen.href='#'; mvOpen.style.opacity='.4'; mvOpen.style.pointerEvents='none';
-      mvDl.onclick = () => downloadHtml(r.report_html, rName(r));
-      mvDl.href='#'; mvDl.style.opacity='1'; mvDl.style.pointerEvents='';
+      mvDl.href='#'; mvDl.onclick = (e) => { e.preventDefault(); downloadHtml(r.report_html, rName(r)); };
+      mvDl.style.opacity='1'; mvDl.style.pointerEvents='';
     } else {
-      viewerBody.innerHTML = `<div class="no-report-state">
-        <div class="no-report-icon">📄</div>
-        <div><strong>No report file yet</strong></div>
-        <div style="font-size:12px;max-width:260px;text-align:center">Once GitHub Actions uploads the HTML report, it will appear here automatically.</div>
-      </div>`;
       mvOpen.href='#'; mvOpen.style.opacity='.4'; mvOpen.style.pointerEvents='none';
       mvDl.href='#'; mvDl.style.opacity='.4'; mvDl.style.pointerEvents='none';
     }
@@ -678,6 +688,74 @@
 
   loadReports(true);
   setInterval(()=>loadReports(false), 120000);
+
+  // ── Clean Log Viewer ──
+  function renderLogViewer(container, r) {
+    const tests = Array.isArray(r.results) ? r.results : [];
+
+    // If we have per-test results, show them
+    if (tests.length > 0) {
+      const rows = tests.map(t => {
+        const ok = t.status === 'PASS';
+        const cls = ok ? 'pass' : 'fail';
+        const dot = ok ? '✅' : '❌';
+        const dur = t.duration != null ? `<span class="log-time">${Number(t.duration).toFixed(1)}s</span>` : '';
+        const err = (!ok && t.error) ? `<div style="font-size:11px;color:#b52020;margin-top:3px;font-family:monospace">${esc(t.error)}</div>` : '';
+        return `<div class="log-step ${cls}">
+          <div class="log-dot ${cls}"></div>
+          <div class="log-text">${esc(t.name||'(unnamed)')}${err}</div>
+          ${dur}
+        </div>`;
+      }).join('');
+
+      const passed = tests.filter(t=>t.status==='PASS').length;
+      const failed = tests.filter(t=>t.status!=='PASS').length;
+      container.innerHTML = `<div class="log-viewer">
+        <div class="log-section">Test results — ${passed} passed · ${failed} failed</div>
+        ${rows}
+      </div>`;
+      return;
+    }
+
+    // If we have embedded demo HTML, parse its log table and show steps
+    if (r.report_html) {
+      try {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(r.report_html, 'text/html');
+        const rows = doc.querySelectorAll('tr.event-row');
+        if (rows.length > 0) {
+          let html = '<div class="log-viewer"><div class="log-section">Step-by-step execution log</div>';
+          rows.forEach(row => {
+            const badge = row.querySelector('.badge');
+            const tds = row.querySelectorAll('td');
+            if (tds.length < 3) return;
+            const status = badge ? badge.textContent.trim().toLowerCase() : 'info';
+            const time = tds[1] ? tds[1].textContent.trim() : '';
+            const detail = tds[2] ? tds[2].textContent.trim() : '';
+            if (!detail) return;
+            const cls = status === 'pass' ? 'pass' : status === 'fail' ? 'fail' : 'info';
+            html += `<div class="log-step ${cls}">
+              <div class="log-dot ${cls}"></div>
+              <div class="log-text">${esc(detail)}</div>
+              <span class="log-time">${esc(time)}</span>
+            </div>`;
+          });
+          html += '</div>';
+          container.innerHTML = html;
+          return;
+        }
+      } catch(e) {}
+    }
+
+    // Fallback — no data yet
+    container.innerHTML = `<div class="log-viewer">
+      <div class="log-empty">
+        <div class="log-empty-icon">📋</div>
+        <div><strong>No execution logs yet</strong></div>
+        <div style="font-size:12px;margin-top:6px">Logs will appear here once GitHub Actions runs and uploads the report.</div>
+      </div>
+    </div>`;
+  }
 
   // ── Trace dropdown toggle ──
   function toggleTraceDD(e) {
