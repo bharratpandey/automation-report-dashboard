@@ -320,10 +320,12 @@
   .log-step.pass { border-left: 3px solid #0a7a45; }
   .log-step.fail { border-left: 3px solid #b52020; }
   .log-step.info { border-left: 3px solid #d0d5dd; }
+  .log-step.warn { border-left: 3px solid #d97706; }
   .log-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
   .log-dot.pass { background: #0a7a45; }
   .log-dot.fail { background: #b52020; }
   .log-dot.info { background: #9a9aaa; }
+  .log-dot.warn { background: #d97706; }
   .log-text { flex: 1; color: #334; word-break: break-word; }
   .log-time { font-size: 10.5px; color: #9a9aaa; white-space: nowrap; margin-top: 2px; font-variant-numeric: tabular-nums; }
   .log-empty { text-align: center; padding: 40px 20px; color: #9a9aaa; font-size: 13px; }
@@ -592,7 +594,7 @@
       <p class="m-credits">Automated by EMB Bot · GitHub Actions · EMB Core Ops</p>
     `;
 
-    // RIGHT — report iframe
+    // RIGHT — log viewer (show loading state first)
     const viewerBody = document.getElementById('modal-viewer-body');
     const mvOpen = document.getElementById('mv-open-tab');
     const mvDl = document.getElementById('mv-download');
@@ -611,6 +613,11 @@
     } else {
       mvOpen.href='#'; mvOpen.style.opacity='.4'; mvOpen.style.pointerEvents='none';
       mvDl.href='#'; mvDl.style.opacity='.4'; mvDl.style.pointerEvents='none';
+    }
+
+    // If real report_url exists, fetch and parse it for real counts + logs
+    if (r.report_url) {
+      fetchAndParseReport(r);
     }
 
     // FOOTER buttons
@@ -802,7 +809,113 @@
     </div>`;
   }
 
-  // ── Trace dropdown toggle ──
+  // ── Fetch real HTML report and parse for counts + logs ──
+  async function fetchAndParseReport(r) {
+    try {
+      // Show loading in viewer
+      const viewerBody = document.getElementById('modal-viewer-body');
+      viewerBody.innerHTML = `<div class="log-viewer"><div class="log-empty"><div class="log-empty-icon" style="font-size:24px;opacity:.5">⏳</div><div>Loading execution logs…</div></div></div>`;
+
+      const res = await fetch(r.report_url);
+      if (!res.ok) throw new Error('Failed to fetch report');
+      const html = await res.text();
+
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+
+      // Extract statusGroup from script tags
+      let passEvents = 0, failEvents = 0, warnEvents = 0;
+      let startTime = '', endTime = '';
+      doc.querySelectorAll('script').forEach(s => {
+        const txt = s.textContent;
+        if (txt.includes('statusGroup')) {
+          const pm = txt.match(/passEvents\s*:\s*(\d+)/);
+          const fm = txt.match(/failEvents\s*:\s*(\d+)/);
+          const wm = txt.match(/warningEvents\s*:\s*(\d+)/);
+          if (pm) passEvents = parseInt(pm[1]);
+          if (fm) failEvents = parseInt(fm[1]);
+          if (wm) warnEvents = parseInt(wm[1]);
+        }
+      });
+
+      // Extract started/ended from dashboard view cards
+      const cards = doc.querySelectorAll('.card-body h3');
+      if (cards.length >= 2) {
+        startTime = cards[0].textContent.trim();
+        endTime   = cards[1].textContent.trim();
+      }
+
+      // Update summary panel with real counts
+      const sCls = r.status==='PASS'?'pass':r.status==='PARTIAL'?'partial':'fail';
+      const total = passEvents + failEvents + warnEvents;
+      let banner = passEvents > 0 && failEvents === 0
+        ? `✅ Health Check Passed — All ${total > 0 ? total : ''} Events OK`
+        : failEvents > 0
+          ? `❌ Health Check Failed — ${failEvents} Events Failed`
+          : `⚠️ Completed with ${warnEvents} Warnings`;
+
+      const traces = Array.isArray(r.traces)&&r.traces.length>0 ? r.traces : (r.trace_url?[{name:rName(r)+' trace',url:r.trace_url}]:[]);
+      const traceRows = traces.map(t=>`<tr><th>Trace File</th><td><a href="https://trace.playwright.dev/?trace=${encodeURIComponent(t.url)}" target="_blank" rel="noopener">${esc(t.name)} ↗</a></td></tr>`).join('');
+
+      const execTime = new Date(r.run_at).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})
+        + ', ' + new Date(r.run_at).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true}) + ' IST';
+
+      // Calculate duration from start/end if available
+      let dur = r.duration_seconds ? Math.floor(r.duration_seconds/60)+'m '+r.duration_seconds%60+'s' : '—';
+
+      document.getElementById('modal-summary').innerHTML = `
+        <p class="m-greeting">Hello Team,</p>
+        <p class="m-banner ${sCls}">${banner}</p>
+        <div class="m-stats">
+          <div class="m-stat"><div class="m-stat-num" style="color:#0a7a45">${passEvents}</div><div class="m-stat-lbl">Cases Passed</div></div>
+          <div class="m-stat"><div class="m-stat-num" style="color:#b52020">${failEvents}</div><div class="m-stat-lbl">Cases Failed</div></div>
+          <div class="m-stat"><div class="m-stat-num" style="color:#1a4a8a">${passEvents+failEvents+warnEvents}</div><div class="m-stat-lbl">Total Events</div></div>
+        </div>
+        <table class="m-table">
+          <tr><th>Environment</th><td>${esc(r.environment||'—')} — ${r.project==='EMB_RA'?'admin.embtalent.ai':'artha.emb.global'}</td></tr>
+          <tr><th>Execution Time</th><td>${execTime}</td></tr>
+          <tr><th>Duration</th><td>${dur}</td></tr>
+          ${startTime ? `<tr><th>Started</th><td>${esc(startTime)}</td></tr>` : ''}
+          ${endTime   ? `<tr><th>Ended</th><td>${esc(endTime)}</td></tr>` : ''}
+          ${traceRows}
+        </table>
+        <div class="m-note"><strong>📌 Stakeholder Note:</strong> This report reflects the latest automated execution run via GitHub Actions. All steps marked <strong>PASSED</strong> have been verified end-to-end. Download the HTML dashboard for full step-by-step logs and screenshots.</div>
+        <p class="m-footer-text">Full execution logs and automated application screenshots are packaged completely in the attached HTML Dashboard.</p>
+        <p class="m-credits">Automated by EMB Bot · GitHub Actions · EMB Core Ops</p>
+      `;
+
+      // Parse event rows for log viewer
+      const rows = doc.querySelectorAll('tr.event-row');
+      if (rows.length > 0) {
+        // Filter to only meaningful rows — skip divider lines and noise
+        const skipPatterns = [/^[─┌┐└┘├┤│╔╗╚╝║═\s]+$/, /^={3,}$/, /^-{3,}$/];
+        let html = `<div class="log-viewer"><div class="log-section">${passEvents} passed · ${failEvents} failed · ${warnEvents} warnings</div>`;
+        rows.forEach(row => {
+          const badge = row.querySelector('.badge');
+          const tds = row.querySelectorAll('td');
+          if (tds.length < 3) return;
+          const status = badge ? badge.textContent.trim().toLowerCase() : 'info';
+          const time   = tds[1] ? tds[1].textContent.trim() : '';
+          const detail = tds[2] ? tds[2].textContent.trim().replace(/\s+/g,' ') : '';
+          if (!detail || skipPatterns.some(p => p.test(detail))) return;
+          const cls = status === 'pass' ? 'pass' : status === 'fail' ? 'fail' : status === 'warning' ? 'warn' : 'info';
+          html += `<div class="log-step ${cls}">
+            <div class="log-dot ${cls}"></div>
+            <div class="log-text">${esc(detail)}</div>
+            <span class="log-time">${esc(time)}</span>
+          </div>`;
+        });
+        html += '</div>';
+        viewerBody.innerHTML = html;
+      } else {
+        viewerBody.innerHTML = `<div class="log-viewer"><div class="log-empty"><div class="log-empty-icon">📋</div><div>No step logs found in report.</div></div></div>`;
+      }
+
+    } catch(err) {
+      const viewerBody = document.getElementById('modal-viewer-body');
+      viewerBody.innerHTML = `<div class="log-viewer"><div class="log-empty"><div class="log-empty-icon">⚠️</div><div>Could not load logs: ${err.message}</div><div style="font-size:12px;margin-top:6px">Use the "↗ Full report" button to view in browser.</div></div></div>`;
+    }
+  }
   function toggleTraceDD(e) {
     e.stopPropagation();
     document.getElementById('trace-dd-menu').classList.toggle('open');
