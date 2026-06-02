@@ -602,20 +602,61 @@
     // Always show clean log viewer
     renderLogViewer(viewerBody, r);
 
-    // Open in tab / Download buttons
+    // Both buttons download the HTML file
     if (r.report_url) {
-      mvOpen.href = r.report_url; mvOpen.style.opacity='1'; mvOpen.style.pointerEvents='';
-      mvDl.href = r.report_url; mvDl.removeAttribute('onclick'); mvDl.style.opacity='1'; mvDl.style.pointerEvents='';
+      // ↓ Full Report button — download
+      mvOpen.href = '#';
+      mvOpen.removeAttribute('target');
+      mvOpen.textContent = '↓ Full Report';
+      mvOpen.onclick = async (e) => {
+        e.preventDefault();
+        mvOpen.textContent = '⏳ Downloading…';
+        mvOpen.style.opacity = '.7';
+        try {
+          const res = await fetch(r.report_url);
+          const html = await res.text();
+          downloadHtml(html, rName(r));
+        } catch(err) {
+          // Fallback direct download
+          const a = document.createElement('a');
+          a.href = r.report_url; a.download = rName(r) + '-report.html'; a.click();
+        } finally {
+          mvOpen.textContent = '↓ Full Report';
+          mvOpen.style.opacity = '1';
+        }
+      };
+      mvOpen.style.opacity='1'; mvOpen.style.pointerEvents='';
+
+      // ↓ Download Execution Report button — same
+      mvDl.href = '#';
+      mvDl.onclick = async (e) => {
+        e.preventDefault();
+        mvDl.textContent = '⏳ Downloading…';
+        mvDl.style.opacity = '.7';
+        try {
+          const res = await fetch(r.report_url);
+          const html = await res.text();
+          downloadHtml(html, rName(r));
+        } catch(err) {
+          const a = document.createElement('a');
+          a.href = r.report_url; a.download = rName(r) + '-report.html'; a.click();
+        } finally {
+          mvDl.textContent = '📥 Download Execution Report';
+          mvDl.style.opacity = '1';
+        }
+      };
+      mvDl.style.opacity='1'; mvDl.style.pointerEvents='';
     } else if (r.report_html) {
       mvOpen.href='#'; mvOpen.style.opacity='.4'; mvOpen.style.pointerEvents='none';
-      mvDl.href='#'; mvDl.onclick = (e) => { e.preventDefault(); downloadHtml(r.report_html, rName(r)); };
+      mvDl.href='#';
+      mvDl.onclick = (e) => { e.preventDefault(); downloadHtml(r.report_html, rName(r)); };
       mvDl.style.opacity='1'; mvDl.style.pointerEvents='';
     } else {
       mvOpen.href='#'; mvOpen.style.opacity='.4'; mvOpen.style.pointerEvents='none';
       mvDl.href='#'; mvDl.style.opacity='.4'; mvDl.style.pointerEvents='none';
     }
 
-    // If real report_url exists, fetch and parse it for real counts + logs
+    // Fetch and parse real HTML report for counts + logs
     if (r.report_url) {
       fetchAndParseReport(r);
     }
@@ -934,18 +975,44 @@
     document.getElementById('trace-dd-menu').classList.remove('open');
   }
 
-  // ── Download report (works for both real URL and embedded HTML) ──
-  function downloadReport(id) {
+  // ── Download report (fetch HTML from URL → blob download) ──
+  async function downloadReport(id) {
     const r = allReports.find(x => x.id === id);
     if (!r) return;
-    if (r.report_url) {
-      // Real file — trigger anchor download
+
+    // Find the footer button and show loading state
+    const btn = document.querySelector('.modal-footer .mf-btn.dl');
+    const origText = btn ? btn.textContent : '';
+    if (btn) { btn.textContent = '⏳ Downloading…'; btn.style.opacity = '.7'; btn.disabled = true; }
+
+    try {
+      if (r.report_url) {
+        // Fetch actual HTML from Supabase Storage → blob download
+        const res = await fetch(r.report_url);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const html = await res.text();
+        downloadHtml(html, rName(r));
+      } else if (r.report_html) {
+        downloadHtml(r.report_html, rName(r));
+      }
+    } catch(err) {
+      alert('Download failed: ' + err.message);
+    } finally {
+      if (btn) { btn.textContent = origText; btn.style.opacity = '1'; btn.disabled = false; }
+    }
+  }
+
+  // Download from a URL (fetches content then saves as file)
+  async function downloadFromUrl(url, name) {
+    try {
+      const res = await fetch(url);
+      const html = await res.text();
+      downloadHtml(html, name);
+    } catch(e) {
+      // Fallback — direct link
       const a = document.createElement('a');
-      a.href = r.report_url; a.download = rName(r) + '.html';
+      a.href = url; a.download = name + '-report.html';
       a.click();
-    } else if (r.report_html) {
-      // Embedded HTML — create blob and download
-      downloadHtml(r.report_html, rName(r));
     }
   }
 
