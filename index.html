@@ -211,18 +211,43 @@
       border-radius: 16px 16px 0 0;
       max-width: 100%; width: 100%;
       height: 95vh;
-      grid-template-rows: auto 1fr auto;
+      display: flex;
+      flex-direction: column;
+      grid-template-rows: unset;
+      overflow: hidden;
     }
-    .modal-header { padding: 14px 16px; }
+
+    /* Sticky header with close button ALWAYS visible */
+    .modal-header {
+      padding: 14px 16px;
+      position: sticky !important;
+      top: 0 !important;
+      z-index: 999 !important;
+      background: #fff !important;
+      flex-shrink: 0 !important;
+      border-bottom: 1px solid #e8eaed !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+    }
     .modal-subject { font-size: 10.5px; }
     .modal-title { font-size: 14px; }
+    .modal-close {
+      width: 36px !important;
+      height: 36px !important;
+      font-size: 18px !important;
+      flex-shrink: 0 !important;
+      background: #f5f7fa !important;
+      border: 1px solid #dde1e7 !important;
+    }
 
-    /* Stack panels vertically — summary on top, viewer below */
+    /* Scrollable content area */
     .modal-panels {
       grid-template-columns: 1fr;
-      grid-template-rows: auto 1fr;
+      flex: 1;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
+      display: block;
     }
     .modal-summary {
       border-right: none;
@@ -231,14 +256,19 @@
       padding: 14px;
     }
 
-    /* Viewer tall on mobile */
-    .modal-viewer { min-height: 420px; height: 420px; flex-shrink: 0; }
+    /* Viewer */
+    .modal-viewer { min-height: 380px; flex-shrink: 0; }
     .modal-viewer-bar { padding: 8px 12px; flex-wrap: wrap; gap: 5px; }
     .modal-viewer-label { font-size: 11.5px; }
     .mv-btn { font-size: 11px; padding: 4px 9px; }
 
-    /* Footer buttons stacked */
-    .modal-footer { flex-direction: column; gap: 8px; padding: 10px 14px; }
+    /* Footer sticky at bottom */
+    .modal-footer {
+      flex-direction: column; gap: 8px; padding: 10px 14px;
+      flex-shrink: 0;
+      border-top: 1px solid #f0f2f5;
+      background: #fafbfc;
+    }
     .mf-btn { font-size: 13px; padding: 12px; border-radius: 10px; }
     .trace-dropdown { width: 100%; }
     .trace-dropdown .mf-btn { width: 100%; }
