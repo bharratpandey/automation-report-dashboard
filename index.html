@@ -383,11 +383,11 @@
   <div class="modal">
 
     <div class="modal-header">
-      <div>
-        <div class="modal-subject" id="modal-subject">—</div>
-        <div class="modal-title" id="modal-title">—</div>
+      <div style="min-width:0;flex:1;overflow:hidden">
+        <div class="modal-subject" id="modal-subject" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">—</div>
+        <div class="modal-title" id="modal-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px">—</div>
       </div>
-      <button class="modal-close" onclick="closeModal()">✕</button>
+      <button class="modal-close" onclick="closeModal()" style="flex-shrink:0;margin-left:10px">✕</button>
     </div>
 
     <div class="modal-panels">
