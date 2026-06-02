@@ -224,12 +224,29 @@
       animation: none !important;
     }
 
-    /* Header — no close button needed here, just title */
+    /* Header — flex with close button */
     .modal-header {
-      padding: 14px 60px 14px 16px !important;
+      padding: 12px 14px !important;
       background: #fff !important;
       border-bottom: 1px solid #e8eaed !important;
-      display: block !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+    }
+    .modal-close {
+      display: flex !important;
+      flex-shrink: 0 !important;
+      width: 36px !important;
+      height: 36px !important;
+      font-size: 18px !important;
+      background: #f0f2f5 !important;
+      color: #1a1a2e !important;
+      border: 1.5px solid #dde1e7 !important;
+      border-radius: 8px !important;
+      cursor: pointer !important;
+      align-items: center !important;
+      justify-content: center !important;
+      margin-left: 10px !important;
     }
     .modal-subject { font-size: 10.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .modal-title { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 2px; }
@@ -288,25 +305,6 @@
   }
 
   /* Floating close button — always hidden by default, shown via JS when modal opens */
-  .float-close {
-    display: none;
-    position: fixed;
-    top: 14px;
-    right: 14px;
-    z-index: 99999;
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    background: #1a4a8a;
-    color: #fff;
-    border: none;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-    align-items: center;
-    justify-content: center;
-  }
 
   /* ── Clean Log Viewer ── */
   .log-viewer { padding: 14px; height: 100%; overflow-y: auto; background: #fafafa; }
@@ -391,9 +389,6 @@
     </table>
   </div>
 </div>
-
-<!-- Floating close button — always visible on mobile, fixed position -->
-<button class="float-close" id="float-close" onclick="closeModal()" title="Close">✕</button>
 
 <!-- Modal -->
 <div class="modal-overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
@@ -650,13 +645,13 @@
 
     document.getElementById('modal-overlay').classList.add('open');
     // Show floating close button on mobile
-    document.getElementById('float-close').style.display = 'flex';
+
     renderTable();
   }
 
   function closeModal() {
     document.getElementById('modal-overlay').classList.remove('open');
-    document.getElementById('float-close').style.display = 'none';
+
     activeId = null;
     renderTable();
   }
