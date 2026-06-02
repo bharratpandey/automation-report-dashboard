@@ -205,74 +205,67 @@
     .actions { justify-content: flex-end; gap: 5px; }
     .act-btn { font-size: 11.5px; padding: 5px 10px; }
 
-    /* Modal — full screen bottom sheet */
-    .modal-overlay { padding: 0; align-items: flex-end; }
+    /* Modal — full page scroll on mobile, no clipping */
+    .modal-overlay {
+      padding: 0 !important;
+      align-items: flex-start !important;
+      overflow-y: auto !important;
+      -webkit-overflow-scrolling: touch !important;
+    }
     .modal {
-      border-radius: 16px 16px 0 0;
-      max-width: 100%; width: 100%;
-      height: 95vh;
-      display: flex;
-      flex-direction: column;
-      grid-template-rows: unset;
-      overflow: hidden;
+      border-radius: 0 !important;
+      max-width: 100% !important;
+      width: 100% !important;
+      height: auto !important;
+      min-height: 100vh !important;
+      display: block !important;
+      overflow: visible !important;
+      box-shadow: none !important;
+      animation: none !important;
     }
 
-    /* Sticky header with close button ALWAYS visible */
+    /* Header — no close button needed here, just title */
     .modal-header {
-      padding: 14px 16px;
-      position: sticky !important;
-      top: 0 !important;
-      z-index: 999 !important;
+      padding: 14px 60px 14px 16px !important;
       background: #fff !important;
-      flex-shrink: 0 !important;
       border-bottom: 1px solid #e8eaed !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: space-between !important;
+      display: block !important;
     }
-    .modal-subject { font-size: 10.5px; }
-    .modal-title { font-size: 14px; }
-    .modal-close {
-      width: 36px !important;
-      height: 36px !important;
-      font-size: 18px !important;
-      flex-shrink: 0 !important;
-      background: #f5f7fa !important;
-      border: 1px solid #dde1e7 !important;
-    }
+    .modal-subject { font-size: 10.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .modal-title { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 2px; }
 
-    /* Scrollable content area */
+    /* Panels — stack vertically, full width */
     .modal-panels {
-      grid-template-columns: 1fr;
-      flex: 1;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-      display: block;
+      display: block !important;
+      overflow: visible !important;
+      grid-template-columns: unset !important;
     }
     .modal-summary {
-      border-right: none;
-      border-bottom: 1px solid #f0f2f5;
-      overflow-y: visible;
-      padding: 14px;
+      border-right: none !important;
+      border-bottom: 1px solid #f0f2f5 !important;
+      overflow: visible !important;
+      padding: 14px !important;
     }
 
     /* Viewer */
-    .modal-viewer { min-height: 380px; flex-shrink: 0; }
+    .modal-viewer { min-height: 380px; display: flex; flex-direction: column; }
     .modal-viewer-bar { padding: 8px 12px; flex-wrap: wrap; gap: 5px; }
     .modal-viewer-label { font-size: 11.5px; }
     .mv-btn { font-size: 11px; padding: 4px 9px; }
+    .modal-viewer-body { flex: 1; min-height: 340px; }
 
-    /* Footer sticky at bottom */
+    /* Footer */
     .modal-footer {
-      flex-direction: column; gap: 8px; padding: 10px 14px;
-      flex-shrink: 0;
-      border-top: 1px solid #f0f2f5;
-      background: #fafbfc;
+      flex-direction: column !important;
+      gap: 8px !important;
+      padding: 12px 14px !important;
+      background: #fafbfc !important;
+      border-top: 1px solid #f0f2f5 !important;
     }
-    .mf-btn { font-size: 13px; padding: 12px; border-radius: 10px; }
-    .trace-dropdown { width: 100%; }
-    .trace-dropdown .mf-btn { width: 100%; }
-    .trace-dd-menu { width: 100%; min-width: unset; bottom: calc(100% + 4px); }
+    .mf-btn { font-size: 13px !important; padding: 14px !important; border-radius: 10px !important; }
+    .trace-dropdown { width: 100% !important; }
+    .trace-dropdown .mf-btn { width: 100% !important; }
+    .trace-dd-menu { width: 100% !important; min-width: unset !important; }
 
     /* Summary compact */
     .m-greeting { font-size: 12.5px; margin-bottom: 8px; }
@@ -292,6 +285,27 @@
     .modal { height: 97vh; }
     .modal-viewer { min-height: 360px; height: 360px; }
     .act-btn { font-size: 11px; padding: 4px 8px; }
+  }
+
+  /* Floating close button — always hidden by default, shown via JS when modal opens */
+  .float-close {
+    display: none;
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    z-index: 99999;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: #1a4a8a;
+    color: #fff;
+    border: none;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    align-items: center;
+    justify-content: center;
   }
 
   /* ── Clean Log Viewer ── */
@@ -378,16 +392,19 @@
   </div>
 </div>
 
+<!-- Floating close button — always visible on mobile, fixed position -->
+<button class="float-close" id="float-close" onclick="closeModal()" title="Close">✕</button>
+
 <!-- Modal -->
 <div class="modal-overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
   <div class="modal">
 
-    <div class="modal-header">
+    <div class="modal-header" id="modal-header">
       <div style="min-width:0;flex:1;overflow:hidden">
-        <div class="modal-subject" id="modal-subject" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">—</div>
-        <div class="modal-title" id="modal-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px">—</div>
+        <div class="modal-subject" id="modal-subject">—</div>
+        <div class="modal-title" id="modal-title">—</div>
       </div>
-      <button class="modal-close" onclick="closeModal()" style="flex-shrink:0;margin-left:10px">✕</button>
+      <button class="modal-close" onclick="closeModal()">✕</button>
     </div>
 
     <div class="modal-panels">
@@ -632,11 +649,14 @@
     document.getElementById('modal-footer').innerHTML = traceBtn + dlBtn;
 
     document.getElementById('modal-overlay').classList.add('open');
+    // Show floating close button on mobile
+    document.getElementById('float-close').style.display = 'flex';
     renderTable();
   }
 
   function closeModal() {
     document.getElementById('modal-overlay').classList.remove('open');
+    document.getElementById('float-close').style.display = 'none';
     activeId = null;
     renderTable();
   }
