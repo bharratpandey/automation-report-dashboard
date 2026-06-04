@@ -448,21 +448,21 @@
 
   // Dummy preview data
   const DUMMY = [
-    { id:'d1', project:'EMB_RA', environment:'Production', status:'PASS', passed:11, failed:0, total:1, duration_seconds:38, run_at: new Date().toISOString(), report_html: DEMO_REPORT_HTML, report_url:null, trace_url:null,
+    { id:'d1', project:'EMB_RA', report_name:'EMB RA Prod Health Check', environment:'Production', status:'PASS', passed:11, failed:0, total:1, duration_seconds:38, run_at: new Date().toISOString(), report_html: DEMO_REPORT_HTML, report_url:null, trace_url:null,
       traces:[
         {name:'report-generation-admin-trace.zip', url:'https://trace.playwright.dev'},
         {name:'report-generation-gmail-trace.zip', url:'https://trace.playwright.dev'},
         {name:'report-generation-fallback-trace.zip', url:'https://trace.playwright.dev'}
       ]
     },
-    { id:'d2', project:'ARTHA', environment:'Production', status:'PASS', passed:94, failed:0, total:38, duration_seconds:214, run_at: (() => { const d=new Date(); d.setHours(d.getHours()-4); return d.toISOString(); })(), report_html: DEMO_REPORT_HTML, report_url:null, trace_url:null,
+    { id:'d2', project:'ARTHA', report_name:'Artha Health Check', environment:'Production', status:'PASS', passed:94, failed:0, total:38, duration_seconds:214, run_at: (() => { const d=new Date(); d.setHours(d.getHours()-4); return d.toISOString(); })(), report_html: DEMO_REPORT_HTML, report_url:null, trace_url:null,
       traces:[
         {name:'artha-prod-health-trace.zip', url:'https://trace.playwright.dev'}
       ]
     },
-    { id:'d3', project:'EMB_RA', environment:'Production', status:'PARTIAL', passed:14, failed:3, total:17, duration_seconds:195, run_at: (() => { const d=new Date(); d.setHours(d.getHours()-8); return d.toISOString(); })(), report_html:null, report_url:null, trace_url:null, traces:[] },
-    { id:'d4', project:'ARTHA', environment:'UAT', status:'FAIL', passed:0, failed:22, total:22, duration_seconds:312, run_at: (() => { const d=new Date(); d.setDate(d.getDate()-1); d.setHours(7,30); return d.toISOString(); })(), report_html:null, report_url:null, trace_url:null, traces:[] },
-    { id:'d5', project:'EMB_RA', environment:'Production', status:'PASS', passed:118, failed:0, total:46, duration_seconds:261, run_at: (() => { const d=new Date(); d.setDate(d.getDate()-1); d.setHours(19,30); return d.toISOString(); })(), report_html:null, report_url:null, trace_url:null, traces:[] }
+    { id:'d3', project:'EMB_RA', report_name:'RA Report Generation Check', environment:'Production', status:'PARTIAL', passed:14, failed:3, total:17, duration_seconds:195, run_at: (() => { const d=new Date(); d.setHours(d.getHours()-8); return d.toISOString(); })(), report_html:null, report_url:null, trace_url:null, traces:[] },
+    { id:'d4', project:'ARTHA', report_name:'RA Weekly E2E Full Flow', environment:'UAT', status:'FAIL', passed:0, failed:22, total:22, duration_seconds:312, run_at: (() => { const d=new Date(); d.setDate(d.getDate()-1); d.setHours(7,30); return d.toISOString(); })(), report_html:null, report_url:null, trace_url:null, traces:[] },
+    { id:'d5', project:'EMB_RA', report_name:'EMB RA Prod Health Check', environment:'Production', status:'PASS', passed:118, failed:0, total:46, duration_seconds:261, run_at: (() => { const d=new Date(); d.setDate(d.getDate()-1); d.setHours(19,30); return d.toISOString(); })(), report_html:null, report_url:null, trace_url:null, traces:[] }
   ];
 
   function todayStr() {
@@ -515,7 +515,10 @@
   }
   function setTab(tab,el) { activeTab=tab; document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active')); el.classList.add('active'); renderTable(); }
 
-  function rName(r) { return r.project==='EMB_RA'?'EMB Prod Health Check':'Artha Health Check'; }
+  function rName(r) {
+    if (r.report_name) return r.report_name;
+    return r.project === 'EMB_RA' ? 'EMB RA Prod Health Check' : 'Artha Health Check';
+  }
 
   function renderTable() {
     const key = document.getElementById('date-picker').value;
