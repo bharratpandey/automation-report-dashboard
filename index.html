@@ -543,7 +543,7 @@
         <td class="td-env">${r.environment||'—'}</td>
         <td class="td-actions"><div class="actions">
           <button class="act-btn ${isA?'active':''}" onclick="openModal('${r.id}')">👁 View</button>
-          ${hasDl?`<a class="act-btn dl" href="${r.report_url}" download>📥 Download</a>`:`<span class="act-btn dl disabled">📥 Download</span>`}
+          ${hasDl?`<button class="act-btn dl" onclick="downloadReport('${r.id}')">📥 Download</button>`:`<span class="act-btn dl disabled">📥 Download</span>`}
         </div></td>
       </tr>`;
     }).join('');
